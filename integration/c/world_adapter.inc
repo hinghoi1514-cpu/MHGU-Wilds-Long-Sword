@@ -4,7 +4,7 @@ static unsigned wilds_focus_active;
 static float wilds_roll_tail,focus_lead_time,focus_strike_time;
 static unsigned wilds_roll_x,wilds_roll_input;
 static unsigned wilds_roll_magnitude,wilds_roll_heading;
-enum { PAD_FOCUS=0x4, PAD_ZR=0x200, PAD_LOCK=0x400, PAD_X=0x1000, PAD_Y=0x8000 };
+enum { PAD_FOCUS=0x4, PAD_ZR=0x800, PAD_LOCK=0x400, PAD_X=0x1000, PAD_Y=0x8000 };
 static struct {
     unsigned active,owner_state,owner_action,generation,state,action,flags;
 } focus_native;
