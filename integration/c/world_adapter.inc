@@ -1743,7 +1743,7 @@ static unsigned world_update(void *a,const MLObservation *b)
             world_r_gate.active=0;
         }else{
             const WEvent *solo=w_event(w_source(u16(a,MOTION)),real(a,FRAME));
-            unsigned stage=solo?(solo->input[WI_R.word]>>WI_R.shift)&3:0;
+            unsigned stage=solo?(solo->input[WI_ZR.word]>>WI_ZR.shift)&3:0;
             if(!stage)world_r_gate.active=0;
             else if((world.keys.ready&ML_ZR)&&stage==3){
                 unsigned action=world_r_gate.action,flags=world_r_gate.flags;world_r_gate.active=0;
