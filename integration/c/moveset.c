@@ -102,13 +102,13 @@ MLCommand ml_step(MLState *s,const MLObservation *o)
     if(s->solo_key&&fresh_sample&&o->simulation_delta>0&&o->simulation_delta<10)s->solo_wait+=o->simulation_delta;
 
     unsigned choice=0,mask=0;
-    if((o->held&(ML_X|ML_A|ML_R))==(ML_X|ML_A)&&!s->consumed){
+    if((o->held&(ML_X|ML_A|ML_ZR))==(ML_X|ML_A)&&!s->consumed){
         if(s->current==ML_THRUST){choice=ml_choose_fade(o->heading,o->input_heading,o->magnitude);mask=ML_X|ML_A;}
-    }else if((o->held&ML_R)&&!(o->held&(ML_X|ML_A|ML_Y))&&!(s->consumed&ML_R)){
-        if(is_fade(s->current)){choice=ML_SPIRIT_STEP;mask=ML_R;}
-        else if(s->current==ML_SPIRIT_STEP&&o->gauge>=20){choice=ML_SPIRIT_III;mask=ML_R;}
-        else if(s->current==ML_SPIRIT_III&&o->gauge>=25){choice=ML_ROUND;mask=ML_R;}
-    }else if(s->current==ML_THRUST&&(o->held&ML_X)&&!(o->held&(ML_A|ML_R))&&!(s->consumed&ML_X)){
+    }else if((o->held&ML_ZR)&&!(o->held&(ML_X|ML_A|ML_Y))&&!(s->consumed&ML_ZR)){
+        if(is_fade(s->current)){choice=ML_SPIRIT_STEP;mask=ML_ZR;}
+        else if(s->current==ML_SPIRIT_STEP&&o->gauge>=20){choice=ML_SPIRIT_III;mask=ML_ZR;}
+        else if(s->current==ML_SPIRIT_III&&o->gauge>=25){choice=ML_ROUND;mask=ML_ZR;}
+    }else if(s->current==ML_THRUST&&(o->held&ML_X)&&!(o->held&(ML_A|ML_ZR))&&!(s->consumed&ML_X)){
         if(pressed&ML_X){s->solo_key=ML_X;s->solo_wait=0;}
         if(s->solo_key){choice=ML_UPPER;mask=ML_X;}
     }
@@ -153,9 +153,9 @@ unsigned ml_should_filter(const MLState *s,const MLObservation *o,unsigned state
        (s->phase==ML_WAIT_BIND||s->eligible_queue))return 1;
     if(state!=16||action>153)return 0;
     unsigned current=ml_native_semantic(o->native_action,o->motion);
-    if(current==ML_THRUST&&((o->held&(ML_X|ML_A))!=0)&&!(o->held&ML_R))return 1;
+    if(current==ML_THRUST&&((o->held&(ML_X|ML_A))!=0)&&!(o->held&ML_ZR))return 1;
     if((is_fade(current)||current==ML_SPIRIT_STEP||current==ML_SPIRIT_III)&&
-       (o->held&ML_R)&&!(o->held&(ML_X|ML_A|ML_Y)))return 1;
+       (o->held&ML_ZR)&&!(o->held&(ML_X|ML_A|ML_Y)))return 1;
     return 0;
 }
 
