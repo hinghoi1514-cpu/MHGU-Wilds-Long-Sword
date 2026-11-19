@@ -4,7 +4,7 @@ static unsigned wilds_focus_active;
 static float wilds_roll_tail,focus_lead_time,focus_strike_time;
 static unsigned wilds_roll_x,wilds_roll_input;
 static unsigned wilds_roll_magnitude,wilds_roll_heading;
-enum { PAD_FOCUS=0x4, PAD_R=0x200, PAD_LOCK=0x400, PAD_X=0x1000, PAD_Y=0x8000 };
+enum { PAD_FOCUS=0x4, PAD_ZR=0x200, PAD_LOCK=0x400, PAD_X=0x1000, PAD_Y=0x8000 };
 static struct {
     unsigned active,owner_state,owner_action,generation,state,action,flags;
 } focus_native;
@@ -47,7 +47,7 @@ static u32 world_pad_map(void *device,u32 meta,u32 pad_state,u32 sample)
 {
     u32 result=world_original_pad_map(device,meta,pad_state,sample);
     u32 bits=word((void *)(uptr)sample,0);
-    if(valor_guard_pad(bits)){bits|=PAD_R;put((void *)(uptr)sample,0,bits);}
+    if(valor_guard_pad(bits)){bits|=PAD_ZR;put((void *)(uptr)sample,0,bits);}
     if(!!(bits&PAD_FOCUS)==!!(bits&PAD_LOCK))return result;
     void *players=(void *)(uptr)word((void *)main_base,0x1885b58);
     if(!players)return result;
