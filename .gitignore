@@ -1,0 +1,6 @@
+/integration/target/
+/integration/*.nro
+/local-data/
+__pycache__/
+/wilds-port/assets/
+/wilds-port/build/

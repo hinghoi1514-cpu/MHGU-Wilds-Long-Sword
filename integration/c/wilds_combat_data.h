@@ -1,0 +1,85 @@
+#pragma once
+typedef struct {unsigned source,slot,frames,offset,cancel,recovery;} WildsClip;
+static const WildsClip wilds_clips[]={
+ {901u,247u,138u,0u,44u,95u},
+ {902u,248u,201u,138u,105u,145u},
+ {903u,249u,188u,339u,53u,100u},
+ {904u,250u,373u,527u,126u,205u},
+ {905u,251u,197u,900u,68u,94u},
+ {906u,208u,148u,1097u,53u,108u},
+ {907u,209u,175u,1245u,77u,122u},
+ {908u,210u,229u,1420u,0u,228u},
+ {909u,211u,127u,1649u,0u,126u},
+ {915u,217u,107u,1776u,0u,106u},
+ {916u,218u,26u,1883u,0u,25u},
+ {917u,219u,176u,1909u,55u,100u},
+ {918u,220u,193u,2085u,80u,160u},
+ {910u,212u,148u,2278u,48u,92u},
+ {911u,213u,148u,2426u,48u,92u},
+ {912u,214u,164u,2574u,78u,115u},
+ {913u,215u,90u,2738u,53u,70u},
+ {914u,216u,139u,2828u,42u,90u},
+ {920u,98u,140u,2967u,44u,95u},
+ {921u,99u,140u,3107u,90u,95u},
+ {922u,84u,137u,3247u,60u,96u},
+ {923u,85u,180u,3384u,68u,106u},
+ {924u,86u,173u,3564u,68u,106u},
+ {925u,87u,191u,3737u,75u,112u},
+};
+typedef struct {unsigned source,begin,end,row,tiered;} WildsStrike;
+static const WildsStrike wilds_strikes[]={
+ {902u,13u,24u,141u,1u},
+ {902u,33u,45u,145u,1u},
+ {902u,84u,97u,149u,1u},
+ {903u,30u,47u,153u,0u},
+ {910u,26u,41u,154u,0u},
+ {911u,26u,41u,155u,0u},
+ {912u,25u,43u,156u,0u},
+ {912u,60u,71u,157u,0u},
+ {904u,23u,33u,158u,0u},
+ {904u,37u,47u,159u,0u},
+ {904u,81u,94u,160u,0u},
+ {917u,24u,44u,161u,0u},
+ {918u,15u,35u,162u,0u},
+ {918u,40u,69u,163u,0u},
+ {905u,44u,62u,164u,0u},
+ {913u,8u,21u,165u,0u},
+ {913u,36u,49u,166u,0u},
+ {914u,10u,33u,167u,0u},
+ {922u,28u,39u,139u,0u},
+ {922u,42u,56u,138u,0u},
+ {923u,20u,38u,139u,0u},
+ {923u,56u,65u,138u,0u},
+ {924u,20u,38u,139u,0u},
+ {924u,56u,65u,138u,0u},
+ {925u,22u,36u,139u,0u},
+ {925u,60u,72u,138u,0u},
+ {901u,16u,25u,172u,0u},
+ {901u,34u,43u,173u,0u},
+ {906u,28u,36u,174u,0u},
+ {906u,42u,50u,175u,0u},
+ {907u,21u,29u,176u,0u},
+ {907u,45u,52u,177u,0u},
+ {907u,60u,70u,178u,0u},
+ {920u,14u,22u,179u,0u},
+ {920u,32u,40u,180u,0u},
+ {921u,26u,38u,181u,0u},
+ {921u,46u,54u,182u,0u},
+ {921u,73u,86u,183u,0u},
+};
+#define WILDS_HIT_COUNT 192u
+#define WILDS_SHAPE 15u
+static const WildsClip *wilds_clip(unsigned source){for(unsigned i=0;i<sizeof(wilds_clips)/sizeof(*wilds_clips);++i)if(wilds_clips[i].source==source)return wilds_clips+i;return 0;}
+#define WILDS_RELEASE_ROW 168u
+#define WILDS_RELEASE_SHAPE 16u
+typedef struct {unsigned first,last,donor,row;} WildsSpiritRow;
+static const WildsSpiritRow wilds_spirit_rows[]={
+ {16u,16u,8u,184u},
+ {17u,17u,9u,185u},
+ {23u,24u,10u,186u},
+ {26u,27u,11u,187u},
+ {26u,27u,12u,188u},
+ {26u,27u,13u,189u},
+};
+#define WILDS_ROUND_NORMAL_ROW 190u
+#define WILDS_ROUND_RED_FORESIGHT_ROW 191u
