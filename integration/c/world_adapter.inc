@@ -547,8 +547,8 @@ static unsigned world_focus_native_input(void *a,unsigned state,unsigned action,
     unsigned spirit=state==16&&((action>=16&&action<=19)||action==23||action==24||
         action==26||action==27||action==30);
     unsigned sheath=state==1&&action==2;
-    if(held==(ML_R|ML_Y))return spirit||sheath;
-    unsigned button=held==ML_R&&spirit?PAD_R:held==ML_Y&&sheath?PAD_Y:0;
+    if(held==(ML_ZR|ML_Y))return spirit||sheath;
+    unsigned button=held==ML_ZR&&spirit?PAD_ZR:held==ML_Y&&sheath?PAD_Y:0;
     if(!button||(!(edge&button)&&focus_lead_time<=0))return 0;
     if(!focus_native.active){
         focus_native.active=1;focus_native.owner_state=owner_state;focus_native.owner_action=owner_action;
@@ -974,7 +974,7 @@ static unsigned valor_guard_pad(unsigned bits)
 static unsigned valor_follow_input(unsigned keys,unsigned edge)
 {
     return ((edge&PAD_X)&&keys==ML_X)||
-           ((edge&(PAD_X|PAD_ZR))&&keys==(ML_R|ML_X))||
+           ((edge&(PAD_X|PAD_ZR))&&keys==(ML_ZR|ML_X))||
            ((edge&0x6200u)&&keys==(ML_ZR|ML_A));
 }
 static void valor_guard_input(void *a,unsigned keys,unsigned edge)
@@ -985,7 +985,7 @@ static void valor_guard_input(void *a,unsigned keys,unsigned edge)
         valor_guard.generation=bind_generation;valor_guard.chord=valor_guard.spirit=0;
     }
     if(valor_guard.early_r&&!(keys&ML_ZR))valor_guard.released=1;
-    if((edge&PAD_ZR)&&keys==ML_R&&!valor_guard.replayed&&!valor_guard.spirit&&real(a,FRAME)<55)valor_guard.early_r=1;
+    if((edge&PAD_ZR)&&keys==ML_ZR&&!valor_guard.replayed&&!valor_guard.spirit&&real(a,FRAME)<55)valor_guard.early_r=1;
     if(valor_follow_input(keys,edge)){
         valor_guard.chord=keys;valor_guard.spirit=valor_guard.early_r=0;
     }
@@ -1010,7 +1010,7 @@ static unsigned valor_draw_cut(void *a)
 }
 static unsigned draw_cut_move(unsigned keys)
 {
-    return keys==(ML_R|ML_B)?W_SHEATHE:keys==(ML_R|ML_A)?W_FORESIGHT:0;
+    return keys==(ML_ZR|ML_B)?W_SHEATHE:keys==(ML_ZR|ML_A)?W_FORESIGHT:0;
 }
 static unsigned valor_spirit_recovery(void *a)
 {
@@ -1018,7 +1018,7 @@ static unsigned valor_spirit_recovery(void *a)
     if(u16(a,STATE)!=16||!((act>=23&&act<=24)||act==116||act==117||(act>=134&&act<=141)))return 0;
     /* Require the native strike/recovery pair. A single action can bind a
      * second clip with its own cancel frame. Carry input across that bind. */
-    return w_valor_chord(16,act,motion,10000,ML_R|ML_A,0)!=0;
+    return w_valor_chord(16,act,motion,10000,ML_ZR|ML_A,0)!=0;
 }
 static unsigned crimson_available(void *a)
 {
@@ -1047,7 +1047,7 @@ static void valor_link_collect(void *a,const MLObservation *b,unsigned edge,unsi
     if(pose==2&&valor_follow_input(b->held,edge)){
         valor_link.keys=b->held;valor_link.packet=0;
     }
-    if(pose!=2&&pose!=5&&b->held==ML_R&&(edge&PAD_R)&&b->magnitude>=50&&
+    if(pose!=2&&pose!=5&&b->held==ML_ZR&&(edge&PAD_ZR)&&b->magnitude>=50&&
        (b->gauge>=10||word(a,0x3330)==3||(word(a,10056)&0x400000u))&&!valor_link.moving){
         MLObservation input=observe(a,1);
         valor_link.moving=1;valor_link.elapsed=0;
@@ -1101,7 +1101,7 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
     if(!world.move&&(state==16||w_native_roll(state,action))&&valor_draw_cut(a)){
         valor_link_collect(a,&raw,edge,5);
         if(valor_link.keys)return 1;
-        if(state==16&&(raw.held&~ML_Y)==ML_R){
+        if(state==16&&(raw.held&~ML_Y)==ML_ZR){
             if(!valor_link.packet){
                 valor_link.packet=action;valor_link.flags=flags;valor_link.elapsed=0;
             }
@@ -1126,8 +1126,8 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
             if(valor_link.keys)return 1;
             if(valor_link.moving&&spirit&&!(action==130&&(word(a,10056)&0x400000u)))return 1;
             if((pose==1||pose==3)&&(word(a,10056)&0x400000u)&&state==16&&
-               ((raw.held==ML_X&&(edge&PAD_X))||raw.held==(ML_R|ML_A)))return 1;
-            if(pose==2&&spirit&&(raw.held==ML_R||valor_link.packet)){
+               ((raw.held==ML_X&&(edge&PAD_X))||raw.held==(ML_ZR|ML_A)))return 1;
+            if(pose==2&&spirit&&(raw.held==ML_ZR||valor_link.packet)){
                 if(!valor_link.packet){valor_link.packet=action;valor_link.flags=flags;valor_link.elapsed=0;}
                 return 1;
             }
@@ -1135,7 +1135,7 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
         if(valor_guard_pose(a)){
             valor_guard_input(a,raw.held,edge);
             if(valor_guard.chord)return 1;
-            if(state==16&&(action==116||action==136)&&(raw.held==ML_R||valor_guard.spirit)){
+            if(state==16&&(action==116||action==136)&&(raw.held==ML_ZR||valor_guard.spirit)){
                 if(!valor_guard.spirit){
                     valor_guard.early_r=0;valor_guard.spirit=action;valor_guard.flags=flags;
                     valor_guard.deadline=real(a,FRAME)+6.0f;
@@ -1162,20 +1162,20 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
         const WEvent *cancel=w_event(src,real(a,FRAME));
         unsigned sheath=cancel&&((cancel->input[WI_SHEATHE.word]>>WI_SHEATHE.shift)&3)==3;
         unsigned packet=(state==16&&w_guild_attack(action))||((state==1||state==2)&&action<=14);
-        if(packet&&window&&raw.held==(ML_R|ML_B)&&
+        if(packet&&window&&raw.held==(ML_ZR|ML_B)&&
            (src==1||sheath))return 1;
-        /* Keep a leading directional R undecided until the chord grace period
+        /* Keep a leading directional ZR undecided until the chord grace period
          * has elapsed. Only the core may dispatch its moving opener. */
         unsigned spirit_packet=(action>=16&&action<=19)||action==23||action==24||action==26||action==27||action==30;
         /* GU can replay the second strike before the directional tap's
-         * execute window opens. Hold that request through R release. */
+         * execute window opens. Hold that request through ZR release. */
         if(state==16&&(action==23||action==24)&&src==104&&
            world.wilds_r_pending&&world.wilds_r_direction&&
            (word(a,0x3330)==3||raw.gauge>=15)){
             world_r_gate.active=0;return 1;
         }
-        if(state==16&&spirit_packet&&raw.held==ML_R&&(src==104||src==106||src==108))return 1;
-        if(state==16&&spirit_packet&&window&&raw.magnitude>=50&&raw.held==ML_R)return 1;
+        if(state==16&&spirit_packet&&raw.held==ML_ZR&&(src==104||src==106||src==108))return 1;
+        if(state==16&&spirit_packet&&window&&raw.magnitude>=50&&raw.held==ML_ZR)return 1;
         if(u16(a,ACTION)==30&&src==109&&((state==1||state==2)&&action<=5)&&
            real(a,FRAME)<w_clip(109)->length-1)return 1;
     }
@@ -1257,15 +1257,15 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
      * In an open chord window keep that exact GU packet until the leading
      * button's World confirmation, or until its overlapping chord wins. */
     if(attack&&(u16(a,STATE)==16||source==1)&&event&&world.input_motion==u16(a,MOTION)&&
-       (held==ML_R||held==ML_X||held==ML_A)){
-        unsigned button=held==ML_R?2:held==ML_A?1:0;
+       (held==ML_ZR||held==ML_X||held==ML_A)){
+        unsigned button=held==ML_ZR?2:held==ML_A?1:0;
         WInput input=held==ML_A?WI_FORESIGHT:WI_THRUST;
         unsigned open=(held==ML_A?(w_foresight_stage(source,event)&2):((event->input[input.word]>>input.shift)&2))||
-            (held==ML_R&&(((event->input[WI_SHEATHE.word]>>WI_SHEATHE.shift)|
+            (held==ML_ZR&&(((event->input[WI_SHEATHE.word]>>WI_SHEATHE.shift)|
                            w_foresight_stage(source,event))&2));
         const WButton *key=controls->buttons+button;
         /* Idle has the global execute bit, not per-command TIML bits. */
-        if(source==1)open=held==ML_R||held==ML_X;
+        if(source==1)open=held==ML_ZR||held==ML_X;
         if(open&&!key->held&&(key->waiting||!key->raw)){
             world_r_gate.active=1;world_r_gate.actor=(u32)(uptr)a;world_r_gate.epoch=byte(a,AREA);
             world_r_gate.motion=u16(a,MOTION);world_r_gate.generation=bind_generation;
@@ -1273,7 +1273,7 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
             world_r_gate.owner_action=u16(a,ACTION);world_r_gate.owner_state=u16(a,STATE);return 1;
         }
     }
-    if(!(held&ML_R))return 0;
+    if(!(held&ML_ZR))return 0;
     if(source==1)return partner==ML_X;
     WInput input;
     if(partner==ML_X)input=WI_THRUST;
@@ -1292,9 +1292,9 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
     if(!world.move&&u16(a,STATE)==16&&state==16&&action==16&&
        (source==105||source==107)&&held&ML_A&&!(held&(ML_X|ML_B))&&event&&
        ((event->input[WI_FORESIGHT.word]>>WI_FORESIGHT.shift)&3)&&world_ready(a)){
-        /* A native buffered R is still a real command if its tap ended
+        /* A native buffered ZR is still a real command if its tap ended
          * before this request. A held A upgrades it to the World chord. */
-        world.queued=W_FORESIGHT;world.queued_mask=ML_R|ML_A;world.queued_source=source;
+        world.queued=W_FORESIGHT;world.queued_mask=ML_ZR|ML_A;world.queued_source=source;
         world.queued_word=WI_FORESIGHT.word;world.queued_shift=WI_FORESIGHT.shift;
         world.queued_heading=u16(a,HEADING);
         return 1;
@@ -1305,7 +1305,7 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
      * and current facing rather than inserting draw prep116 / a re-aim. */
     if(!world.move&&source==105&&u16(a,STATE)==16&&u16(a,ACTION)==4&&
        state==16&&action==7&&world_ready(a)&&!(word(a,AIR)&0x400)){
-        if(held&ML_R)return 1;
+        if(held&ML_ZR)return 1;
         world.queued=0;world.consumed|=ML_X;
         log_event("world_loop_native",(u32)(uptr)a,action,25,(u32)(real(a,FRAME)*1000));
         world_commit(a,(WDecision){.kind=W_NATIVE,.native_action=25,.heading=u16(a,HEADING)});
@@ -1315,13 +1315,13 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
        source>=101&&source<=110&&source!=104&&source!=106&&source!=108&&
        world_ready(a)&&!(word(a,AIR)&0x400)&&event&&
        ((event->input[WI_R.word]>>WI_R.shift)&3)&&
-       (held==ML_R||(world.queued==0x300&&world.queued_source==source)))return 1;
+       (held==ML_ZR||(world.queued==0x300&&world.queued_source==source)))return 1;
     if(world_r_gate.active&&world_r_gate.actor==(u32)(uptr)a&&world_r_gate.epoch==byte(a,AREA)&&
        world_r_gate.motion==u16(a,MOTION)&&world_r_gate.generation==bind_generation&&
        state==16&&action==world_r_gate.action)return 1;
     if(!world.move&&u16(a,STATE)==16&&source&&event&&world_ready(a)&&
        !(word(a,AIR)&0x400)&&state==16&&action>=16&&action<154&&
-       held==ML_R&&((event->input[WI_FORESIGHT.word]>>WI_FORESIGHT.shift)&3)&&
+       held==ML_ZR&&((event->input[WI_FORESIGHT.word]>>WI_FORESIGHT.shift)&3)&&
        (!(world.keys.ready&ML_R)||((event->input[WI_R.word]>>WI_R.shift)&3)!=3)){
         if(!world_r_gate.active){
             world_r_gate.active=1;world_r_gate.actor=(u32)(uptr)a;world_r_gate.epoch=byte(a,AREA);
@@ -1332,15 +1332,15 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
         return 1;
     }
     if(!world.move&&u16(a,STATE)==16&&state==16&&action<154&&
-       !(held&(ML_R|ML_B|ML_Y))&&(held&(ML_X|ML_A))!=(ML_X|ML_A)&&
+       !(held&(ML_ZR|ML_B|ML_Y))&&(held&(ML_X|ML_A))!=(ML_X|ML_A)&&
        ((source==105&&(held&ML_X))||(source==107&&(held&ML_A))))return 1;
-    /* Native R can submit spirit-I before the common update when gauge>0.
-     * Reserve the neutral R+X gesture at that request boundary as well. */
-    if((held&(ML_R|ML_X))==(ML_R|ML_X)&&!(held&(ML_A|ML_B))&&
+    /* Native ZR can submit spirit-I before the common update when gauge>0.
+     * Reserve the neutral ZR+X gesture at that request boundary as well. */
+    if((held&(ML_ZR|ML_X))==(ML_ZR|ML_X)&&!(held&(ML_A|ML_B))&&
        (byte(a,DRAWN)&1)&&!(word(a,AIR)&0x400)&&world_ready(a)&&
        (u16(a,STATE)==1||u16(a,STATE)==2)&&u16(a,ACTION)<=5&&state==16)return 1;
     /* Reserve only a recognized source combo; native X+A fade stays native. */
-    unsigned selection=(held&ML_R)&&((held&(ML_X|ML_A|ML_B))!=0);
+    unsigned selection=(held&ML_ZR)&&((held&(ML_X|ML_A|ML_B))!=0);
     if(selection&&w_source(u16(a,MOTION))&&u16(a,STATE)==16&&
        ((state==16&&action<154)||(state==1&&(action==0||action==6))))return 1;
     return 0;
@@ -1457,13 +1457,13 @@ static unsigned world_update(void *a,const MLObservation *b)
     }
     if(!focus_active||!o.drawn||!o.grounded){
         focus_lead_time=focus_strike_time=0;
-    }else if(b->held==(ML_R|ML_Y)){
-        if(edge&(PAD_R|PAD_Y|PAD_FOCUS)){
+    }else if(b->held==(ML_ZR|ML_Y)){
+        if(edge&(PAD_ZR|PAD_Y|PAD_FOCUS)){
             focus_lead_time=0;focus_strike_time=.32f;focus_native.active=0;
         }
-    }else if(b->held&~(ML_R|ML_Y)){
+    }else if(b->held&~(ML_ZR|ML_Y)){
         focus_lead_time=focus_strike_time=0;focus_native.active=0;
-    }else if((b->held==ML_R&&(edge&PAD_R))||(b->held==ML_Y&&(edge&PAD_Y))){
+    }else if((b->held==ML_ZR&&(edge&PAD_ZR))||(b->held==ML_Y&&(edge&PAD_Y))){
         focus_lead_time=.10f;
     }
     o.valor=valor_active(a);
@@ -1492,13 +1492,13 @@ static unsigned world_update(void *a,const MLObservation *b)
         }
         if(blue&&(link_pose==1||link_pose==3||link_pose==4)&&(edge&0xf200u)){
             if(link_pose!=4&&b->held==ML_X&&(edge&PAD_X))o.valor_move=W_CHIJIN;
-            if(b->held==(ML_R|ML_A)&&(link_pose!=4||b->animation_frame<=8))o.valor_move=W_FORESIGHT;
+            if(b->held==(ML_ZR|ML_A)&&(link_pose!=4||b->animation_frame<=8))o.valor_move=W_FORESIGHT;
         }
         if(link_pose==5){
             if(b->animation_frame>=draw_cancel)o.valor_move=draw_cut_move(valor_link.keys);
         }else if(valor_link.keys)
             o.valor_move=w_valor_chord(o.state,b->native_action,b->motion,b->animation_frame,valor_link.keys,0);
-        if(o.valor_move||(b->held&~ML_R))valor_link.moving=0;
+        if(o.valor_move||(b->held&~ML_ZR))valor_link.moving=0;
         unsigned slide_ready=blue?
             (link_pose==4&&u16(a,MOTION)==0x5c0&&!(word(a,9488)&16u)&&real(a,FRAME)>0):
             valor_link.elapsed>=6;
@@ -1745,7 +1745,7 @@ static unsigned world_update(void *a,const MLObservation *b)
             const WEvent *solo=w_event(w_source(u16(a,MOTION)),real(a,FRAME));
             unsigned stage=solo?(solo->input[WI_R.word]>>WI_R.shift)&3:0;
             if(!stage)world_r_gate.active=0;
-            else if((world.keys.ready&ML_R)&&stage==3){
+            else if((world.keys.ready&ML_ZR)&&stage==3){
                 unsigned action=world_r_gate.action,flags=world_r_gate.flags;world_r_gate.active=0;
                 ++submitting;virtual_request(a,16,action,flags);--submitting;
                 log_event("world_chord_solo",(u32)(uptr)a,action,flags,0);
