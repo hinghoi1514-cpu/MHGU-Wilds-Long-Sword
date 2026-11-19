@@ -9,5 +9,5 @@ static const WInput WI_FADE_LEFT={2u,4u};
 static const WInput WI_FADE_RIGHT={2u,6u};
 static const WInput WI_THRUST={2u,8u};
 static const WInput WI_FORESIGHT={2u,22u};
-static const WInput WI_R={1u,12u};
+static const WInput WI_ZR={1u,12u};
 static const WInput WI_SHEATHE={0u,14u};
