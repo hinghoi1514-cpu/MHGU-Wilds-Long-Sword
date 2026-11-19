@@ -960,8 +960,8 @@ static unsigned valor_guard_pad(unsigned bits)
        (int16_t)u16(a,HP)<=0||!(byte(a,DRAWN)&1)){
         valor_guard.early_r=0;return 0;
     }
-    if(bits&(0xf000u|0x800u)){valor_guard.early_r=0;return 0;}
-    if(bits&PAD_R){valor_guard.released=0;return 0;}
+    if(bits&(0xf000u|0x200u)){valor_guard.early_r=0;return 0;}
+    if(bits&PAD_ZR){valor_guard.released=0;return 0;}
     /* Expose the physical release before replay, even when the player
      * held the tap until the native recovery window was already open. */
     if(!valor_guard.released)return 0;
