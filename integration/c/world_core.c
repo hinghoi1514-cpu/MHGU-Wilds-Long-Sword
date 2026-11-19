@@ -149,8 +149,8 @@ unsigned w_valor_draw_cancel(unsigned action,unsigned motion)
 }
 unsigned w_valor_chord(unsigned state,unsigned action,unsigned motion,float frame,unsigned held,unsigned focus)
 {
-    unsigned move=held==ML_X?W_CHIJIN:held==(ML_R|ML_X)?W_THRUST:
-                  held==(ML_R|ML_A)?W_FORESIGHT:focus&&held==(ML_R|ML_Y)?W_FOCUS:0;
+    unsigned move=held==ML_X?W_CHIJIN:held==(ML_ZR|ML_X)?W_THRUST:
+                  held==(ML_ZR|ML_A)?W_FORESIGHT:focus&&held==(ML_ZR|ML_Y)?W_FOCUS:0;
     if(!move)return 0;
     if((state==1||state==2)&&action<=5)return move==W_FORESIGHT?0:move;
     if(state!=16)return 0;
@@ -202,7 +202,7 @@ static unsigned source_for(unsigned move,unsigned rank)
 }
 static unsigned chord(unsigned held)
 {
-    if(!(held&ML_R))return 0;
+    if(!(held&ML_ZR))return 0;
     if(held&ML_B)return W_SHEATHE;
     if(held&ML_A)return W_FORESIGHT;
     if(held&ML_X)return W_THRUST;
@@ -432,8 +432,8 @@ WDecision w_iai_press(WState *s,const WObservation *o)
     if(w_iai_ready(s,o)&&s->controls.initialized){
         const WEvent *event=w_event(s->source,b->animation_frame);
         unsigned keys=b->held;
-        if(keys==ML_R&&!(s->consumed&ML_R)&&!s->controls.buttons[2].raw&&
-           input_stage(event,WI_R)&2)return enter(s,o,W_BIG,ML_R);
+        if(keys==ML_ZR&&!(s->consumed&ML_ZR)&&!s->controls.buttons[2].raw&&
+           input_stage(event,WI_R)&2)return enter(s,o,W_BIG,ML_ZR);
         if(keys==ML_X&&!(s->consumed&ML_X)&&!s->controls.buttons[0].raw&&
            input_stage(event,WI_X)&2)return enter(s,o,W_SMALL,ML_X);
     }
@@ -640,7 +640,7 @@ WDecision w_step(WState *s,const WObservation *o)
     }
     if(new_sample&&b->simulation_delta>0&&b->simulation_delta<30)
         s->solo_age+=b->simulation_delta/60.0f;
-    unsigned selected=chord(b->held),mask=selected==W_SHEATHE?ML_R|ML_B:selected==W_FORESIGHT?ML_R|ML_A:ML_R|ML_X;
+    unsigned selected=chord(b->held),mask=selected==W_SHEATHE?ML_ZR|ML_B:selected==W_FORESIGHT?ML_ZR|ML_A:ML_ZR|ML_X;
     /* A held modifier may join a newly pressed partner. Consume the whole
      * chord on entry, but do not require both keys to be released together. */
     if(!(held&mask))selected=0;
@@ -652,8 +652,8 @@ WDecision w_step(WState *s,const WObservation *o)
         /* Native start -> loop changes action at phase1 without rebinding306. */
         if(new_sample&&e&&e->phase==1&&b->simulation_delta>0&&b->simulation_delta<30)
             s->hold_seconds+=b->simulation_delta/60.0f;
-        unsigned choice=(held&ML_R)?W_BIG:(held&ML_X)?W_SMALL:0;
-        if(choice)offer(s,e,source,choice,choice==W_BIG?ML_R:ML_X,
+        unsigned choice=(held&ML_ZR)?W_BIG:(held&ML_X)?W_SMALL:0;
+        if(choice)offer(s,e,source,choice,choice==W_BIG?ML_ZR:ML_X,
                         choice==W_BIG?WI_R:WI_X,b->heading);
         unsigned stage=e?(e->input[s->queued_word]>>s->queued_shift)&3:0;
         if(s->queued&&stage==3)return combine(d,enter(s,o,s->queued,s->queued_mask));
@@ -665,11 +665,11 @@ WDecision w_step(WState *s,const WObservation *o)
     if(s->move==W_AIR){
         if(o->grounded&&frame>0)return combine(d,enter(s,o,W_LAND,0));
         unsigned stage=e?(e->input[0]>>30)&3:0;
-        if((held&(ML_X|ML_A|ML_R))&&stage){s->queued=W_DOWN;s->queued_source=source;}
+        if((held&(ML_X|ML_A|ML_ZR))&&stage){s->queued=W_DOWN;s->queued_source=source;}
         /* The source air-attack execute interval opens at42. Complete the
          * successful Helm automatically there, retaining the earlier turn
          * interval and optional buffered attack without requiring a key. */
-        if(stage==3)return combine(d,enter(s,o,W_DOWN,s->queued==W_DOWN?ML_X|ML_A|ML_R:0));
+        if(stage==3)return combine(d,enter(s,o,W_DOWN,s->queued==W_DOWN?ML_X|ML_A|ML_ZR:0));
         if(b->motion_finished||frame>=w_clip(source)->length-1)
             return combine(d,enter(s,o,W_DOWN,0));
         return d;
@@ -686,7 +686,7 @@ WDecision w_step(WState *s,const WObservation *o)
      * a motion change or interrupt discards it. No invented 12-frame timeout. */
     if(s->move&&!selected&&!chord(b->held)&&e){
         unsigned follow=(source==140||source==307);
-        if((held&ML_B)&&!(held&ML_R))
+        if((held&ML_B)&&!(held&ML_ZR))
             offer(s,e,source,0x200,ML_B,WI_ROLL,b->magnitude>=50?b->input_heading:b->heading);
         else if((held&(ML_X|ML_A))==(ML_X|ML_A)&&(follow||source==170)){
             unsigned fade=ml_choose_fade(b->heading,b->input_heading,b->magnitude);
@@ -695,10 +695,10 @@ WDecision w_step(WState *s,const WObservation *o)
                 0x100+ml_move(fade)->native_action;
             if(!offer(s,e,source,choice,ML_X|ML_A,input,b->heading))
                 offer(s,e,source,source==307?0x44f:0x100+ml_move(ML_FADE_BACK)->native_action,ML_X|ML_A,WI_FADE,b->heading);
-        }else if(follow&&(held&ML_R)&&
+        }else if(follow&&(held&ML_ZR)&&
                  ((source==140&&s->counter_success&&s->hit_success)||source==307))
             /* 307 -> 363 -> 104 at42, observed in World421810. */
-            offer(s,e,source,source==140?0x11e:0x452,ML_R,WI_R,b->heading);
+            offer(s,e,source,source==140?0x11e:0x452,ML_ZR,WI_R,b->heading);
         else if(follow&&(held&ML_X))
             offer(s,e,source,source==307?0x44d:0x100,ML_X,WI_X,b->heading);
         else if(follow&&(held&ML_A))
@@ -713,7 +713,7 @@ WDecision w_step(WState *s,const WObservation *o)
         if(o->base.gauge>=25)properties|=(uint64_t)1<<15;
         if(o->rank)properties|=(uint64_t)1<<10;
         WInput input=WI_R;unsigned input_mask=0;
-        if(held==ML_R){properties|=1;input=WI_R;input_mask=ML_R;}
+        if(held==ML_ZR){properties|=1;input=WI_R;input_mask=ML_ZR;}
         else if(held==ML_X){properties|=(uint64_t)1<<3;input=WI_X;input_mask=ML_X;}
         else if(held==ML_A){properties|=(uint64_t)1<<7;input=WI_A;input_mask=ML_A;}
         else if((held&(ML_X|ML_A))==(ML_X|ML_A)){
@@ -737,20 +737,20 @@ WDecision w_step(WState *s,const WObservation *o)
      * A later chord replaces it through offer(); a released tap survives. */
     unsigned native_attack=!s->move&&source>=101&&source<=110&&b->native_action<154;
     unsigned basic_r=native_attack&&source!=104&&source!=106&&source!=108;
-    if(basic_r&&o->grounded&&!selected&&held==ML_R&&
+    if(basic_r&&o->grounded&&!selected&&held==ML_ZR&&
        (input_stage(e,WI_R)||r_window_ahead(source,frame))){
-        s->queued=0x300;s->queued_mask=ML_R;s->queued_source=source;
+        s->queued=0x300;s->queued_mask=ML_ZR;s->queued_source=source;
         s->queued_word=WI_R.word;s->queued_shift=WI_R.shift;s->queued_heading=b->heading;
     }
     /* World FSM Spirit-I -> KijinStab, Spirit-II -> KijinUpper accepts
      * either face button. GU22 is SpiritStab; native25's previous-action
      * context retains Spirit-II -> upper -> Spirit-III through the adapter. */
-    if(native_attack&&!selected&&!(held&(ML_R|ML_B|ML_Y))&&
+    if(native_attack&&!selected&&!(held&(ML_ZR|ML_B|ML_Y))&&
        (held&(ML_X|ML_A))!=(ML_X|ML_A)&&(source==104||source==106)){
         if(held&ML_X)offer(s,e,source,0x100+(source==104?22:25),ML_X,WI_X,b->heading);
         else if(held&ML_A)offer(s,e,source,0x100+(source==104?22:25),ML_A,WI_A,b->heading);
     }
-    if(loop&&!selected&&!(held&(ML_R|ML_B|ML_Y))&&
+    if(loop&&!selected&&!(held&(ML_ZR|ML_B|ML_Y))&&
        (held&(ML_X|ML_A))!=(ML_X|ML_A)){
         /* GU action7 is the draw-upper: prep116 then107 at frame20.
          * Native combo upper25 binds107 directly, preserving its attack row. */
@@ -764,7 +764,7 @@ WDecision w_step(WState *s,const WObservation *o)
             WInput input={s->queued_word,s->queued_shift};
             if(s->move||!input_window_ahead(source,frame,input))s->queued=0;
         }
-        else if(stage==3&&((s->queued==0x300)?(s->keys.ready&ML_R):
+        else if(stage==3&&((s->queued==0x300)?(s->keys.ready&ML_ZR):
                          (!loop||s->queued<0x100||(s->keys.ready&s->queued_mask)))){
             if(s->queued<0x100)return combine(d,enter(s,o,s->queued,s->queued_mask));
             if(s->queued>=0x400)return combine(d,ground_enter(s,o,s->queued-0x400,s->queued_mask));
