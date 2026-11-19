@@ -106,7 +106,7 @@ static WDecision wilds_bridge(WState *s,const WObservation *o,unsigned source)
        (source==1||input_stage(w_event(source,b->animation_frame),WI_SHEATHE)==3)){
         s->wilds_direction_pending=0;return enter(s,o,W_SHEATHE,ML_ZR|ML_B);
     }
-    if(!opener||(b->held&(ML_X|ML_A|ML_B|ML_Y|ML_R)))s->wilds_direction_pending=0;
+    if(!opener||(b->held&(ML_X|ML_A|ML_B|ML_Y|ML_ZR)))s->wilds_direction_pending=0;
     else{
         if((edge&ML_ZR)&&b->held==ML_ZR&&b->magnitude>=50){
             s->wilds_direction_pending=1;s->wilds_direction_age=0;
@@ -136,7 +136,7 @@ static WDecision wilds_bridge(WState *s,const WObservation *o,unsigned source)
             s->wilds_r_pending=1;s->wilds_r_wait=.28f;
             wilds_spirit_direction(s,b);
         }
-        if(b->held&(ML_X|ML_A|ML_B|ML_Y|ML_R))s->wilds_r_pending=0;
+        if(b->held&(ML_X|ML_A|ML_B|ML_Y|ML_ZR))s->wilds_r_pending=0;
         if(s->wilds_r_wait>0)s->wilds_r_wait-=dt;
         if(!(b->held&ML_ZR))s->wilds_r_wait=0;
         if(permission==3){
@@ -229,10 +229,10 @@ static WDecision wilds_step(WState *s,const WObservation *o)
         s->wilds_r_pending=1;s->wilds_r_wait=.10f;
         wilds_spirit_direction(s,b);
     }
-    if(b->held&(ML_Y|ML_R|ML_B))s->wilds_r_pending=0;
+    if(b->held&(ML_Y|ML_ZR|ML_B))s->wilds_r_pending=0;
     /* Buffer the final twelve recovery frames so an early evade tap is not
      * swallowed by the native request filter while our action owns the slot. */
-    if((pressed&ML_B)&&!(b->held&ML_R)&&frame+12>=clip->cancel){
+    if((pressed&ML_B)&&!(b->held&ML_ZR)&&frame+12>=clip->cancel){
         s->wilds_roll_buffer=.25f;s->wilds_roll_mod=b->held&ML_ZR;
         s->wilds_roll_heading=b->magnitude>=50?b->input_heading:b->heading;
     }
@@ -288,7 +288,7 @@ static WDecision wilds_step(WState *s,const WObservation *o)
     if(frame>=clip->cancel){
         if(s->move==W_SLIDE&&b->held==ML_ZR&&s->wilds_elapsed>=.6f)
             return wilds_charge(s,o,wilds_spirit_is_two(s->source)?3:2);
-        if((pressed&(ML_X|ML_A))&&(b->held&(ML_X|ML_A|ML_ZR|ML_R))==(ML_X|ML_A)){
+        if((pressed&(ML_X|ML_A))&&(b->held&(ML_X|ML_A|ML_ZR|ML_ZR))==(ML_X|ML_A)){
             return wilds_native(s,o,wilds_fade_action(o));
         }
         if((pressed&ML_B)&&!(b->held&ML_R)){
