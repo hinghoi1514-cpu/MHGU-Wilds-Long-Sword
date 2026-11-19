@@ -2,7 +2,7 @@
 #include "world_gesture_vm.h"
 typedef struct {
     unsigned actor,epoch,sample,initialized,changed_primary,force_clear;
-    WButton buttons[4]; /* X,A,R,B */
+    WButton buttons[4]; /* X,A,ZR,B */
     WCommands commands;
     WCommandQueries queries;
     uint32_t previous_queries[5],permission[8];
