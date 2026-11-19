@@ -14,12 +14,12 @@ static inline void w_gesture_direction(uint32_t *bits,unsigned id,unsigned stick
  * held. A short released tap remains a waiting button, as in11edc90.
  * There is no extra delay applied when a command reaches an execute window. */
 static inline WGestures w_gestures(const WButton *x,const WButton *a,
-    const WButton *r,const WButton *b,unsigned stick,unsigned direction,unsigned roll_direction)
+    const WButton *zr,const WButton *b,unsigned stick,unsigned direction,unsigned roll_direction)
 {
     WGestures g={0};
     if(b->edge){w_gesture_bit(g.raw,17);w_gesture_direction(g.raw,17,stick,roll_direction);}
     if(b->pressed){w_gesture_bit(g.pressed,17);w_gesture_direction(g.pressed,17,stick,roll_direction);}
-    if(r->waiting||r->held){
+    if(zr->waiting||zr->held){
         if(b->waiting||b->edge)w_gesture_bit(g.raw,24);
         if(b->pressed)w_gesture_bit(g.pressed,24);
     }
@@ -27,12 +27,12 @@ static inline WGestures w_gestures(const WButton *x,const WButton *a,
         w_gesture_bit(g.raw,46);w_gesture_direction(g.raw,46,stick,direction);
         w_gesture_bit(g.pressed,46);w_gesture_direction(g.pressed,46,stick,direction);
     }
-    const WButton *buttons[]={x,a,r};static const unsigned ids[]={25,32,39};
+    const WButton *buttons[]={x,a,zr};static const unsigned ids[]={25,32,39};
     for(unsigned i=0;i<3;++i){
         if(buttons[i]->edge){w_gesture_bit(g.raw,ids[i]);w_gesture_direction(g.raw,ids[i],stick,direction);}
         if(buttons[i]->pressed){w_gesture_bit(g.pressed,ids[i]);w_gesture_direction(g.pressed,ids[i],stick,direction);}
     }
-    if(r->waiting||r->held){
+    if(zr->waiting||zr->held){
         const WButton *partners[]={x,a};static const unsigned chords[]={53,60};
         for(unsigned i=0;i<2;++i){
             if(partners[i]->waiting||partners[i]->edge){
