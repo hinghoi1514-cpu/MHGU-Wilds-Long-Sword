@@ -974,8 +974,8 @@ static unsigned valor_guard_pad(unsigned bits)
 static unsigned valor_follow_input(unsigned keys,unsigned edge)
 {
     return ((edge&PAD_X)&&keys==ML_X)||
-           ((edge&(PAD_X|PAD_R))&&keys==(ML_R|ML_X))||
-           ((edge&0x6200u)&&keys==(ML_R|ML_A));
+           ((edge&(PAD_X|PAD_ZR))&&keys==(ML_R|ML_X))||
+           ((edge&0x6200u)&&keys==(ML_ZR|ML_A));
 }
 static void valor_guard_input(void *a,unsigned keys,unsigned edge)
 {
@@ -984,8 +984,8 @@ static void valor_guard_input(void *a,unsigned keys,unsigned edge)
         valor_guard.early_r=valor_guard.replayed=valor_guard.released=0;
         valor_guard.generation=bind_generation;valor_guard.chord=valor_guard.spirit=0;
     }
-    if(valor_guard.early_r&&!(keys&ML_R))valor_guard.released=1;
-    if((edge&PAD_R)&&keys==ML_R&&!valor_guard.replayed&&!valor_guard.spirit&&real(a,FRAME)<55)valor_guard.early_r=1;
+    if(valor_guard.early_r&&!(keys&ML_ZR))valor_guard.released=1;
+    if((edge&PAD_ZR)&&keys==ML_R&&!valor_guard.replayed&&!valor_guard.spirit&&real(a,FRAME)<55)valor_guard.early_r=1;
     if(valor_follow_input(keys,edge)){
         valor_guard.chord=keys;valor_guard.spirit=valor_guard.early_r=0;
     }
