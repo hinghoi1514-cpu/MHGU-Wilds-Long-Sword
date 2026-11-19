@@ -91,7 +91,7 @@ static WDecision wilds_round(WState *s,const WObservation *o)
     d.source=s->source;d.slot=s->slot;return d;
 }
 /* The stock Spirit actions still own their native hit and gauge logic. This
- * bridge adds the source game's hold-R transitions without replacing them. */
+ * bridge adds the source game's hold-ZR transitions without replacing them. */
 static WDecision wilds_bridge(WState *s,const WObservation *o,unsigned source)
 {
     const MLObservation *b=&o->base;
@@ -102,13 +102,13 @@ static WDecision wilds_bridge(WState *s,const WObservation *o,unsigned source)
     float dt=b->simulation_delta>0&&b->simulation_delta<30?b->simulation_delta/60:0;
     unsigned ordinary=!s->move&&(source==1||source==101||source==102||source==103||source==105||source==107);
     unsigned opener=ordinary&&(source==1||b->animation_frame>=24);
-    if(opener&&(b->held&(ML_R|ML_B))==(ML_R|ML_B)&&(edge&(ML_R|ML_B))&&
+    if(opener&&(b->held&(ML_ZR|ML_B))==(ML_ZR|ML_B)&&(edge&(ML_ZR|ML_B))&&
        (source==1||input_stage(w_event(source,b->animation_frame),WI_SHEATHE)==3)){
-        s->wilds_direction_pending=0;return enter(s,o,W_SHEATHE,ML_R|ML_B);
+        s->wilds_direction_pending=0;return enter(s,o,W_SHEATHE,ML_ZR|ML_B);
     }
-    if(!opener||(b->held&(ML_X|ML_A|ML_B|ML_Y|ML_ZR)))s->wilds_direction_pending=0;
+    if(!opener||(b->held&(ML_X|ML_A|ML_B|ML_Y|ML_R)))s->wilds_direction_pending=0;
     else{
-        if((edge&ML_R)&&b->held==ML_R&&b->magnitude>=50){
+        if((edge&ML_ZR)&&b->held==ML_ZR&&b->magnitude>=50){
             s->wilds_direction_pending=1;s->wilds_direction_age=0;
             s->wilds_direction_heading=b->heading;s->wilds_direction_input=b->input_heading;
         }
@@ -123,26 +123,26 @@ static WDecision wilds_bridge(WState *s,const WObservation *o,unsigned source)
             }
         }
     }
-    if(b->held!=ML_R)s->wilds_bridge_hold=0;
+    if(b->held!=ML_ZR)s->wilds_bridge_hold=0;
     else if(b->simulation_delta>0&&b->simulation_delta<30)s->wilds_bridge_hold+=b->simulation_delta/60;
     if(!o->grounded)return (WDecision){0};
     if(s->move==W_LAND&&s->wilds_helm_red&&b->animation_frame>=12&&
-       (edge&ML_R)&&b->held==ML_R)return w_wilds_enter(s,o,W_RELEASE);
+       (edge&ML_ZR)&&b->held==ML_ZR)return w_wilds_enter(s,o,W_RELEASE);
     unsigned spirit=source==104||source==106||source==108;
     unsigned insertion=source==112||source==307;
     if((!s->move&&spirit)||insertion){
         unsigned permission=input_stage(w_event(source,b->animation_frame),WI_R);
-        if((edge&ML_R)&&b->held==ML_R&&permission){
+        if((edge&ML_ZR)&&b->held==ML_ZR&&permission){
             s->wilds_r_pending=1;s->wilds_r_wait=.28f;
             wilds_spirit_direction(s,b);
         }
-        if(b->held&(ML_X|ML_A|ML_B|ML_Y|ML_ZR))s->wilds_r_pending=0;
+        if(b->held&(ML_X|ML_A|ML_B|ML_Y|ML_R))s->wilds_r_pending=0;
         if(s->wilds_r_wait>0)s->wilds_r_wait-=dt;
-        if(!(b->held&ML_R))s->wilds_r_wait=0;
+        if(!(b->held&ML_ZR))s->wilds_r_wait=0;
         if(permission==3){
-            if(spirit&&b->held==ML_R&&s->wilds_bridge_hold>=.6f)
+            if(spirit&&b->held==ML_ZR&&s->wilds_bridge_hold>=.6f)
                 return wilds_charge(s,o,source==104?2:source==106?3:4);
-            if(s->wilds_r_pending&&!(b->held&ML_R)){
+            if(s->wilds_r_pending&&!(b->held&ML_ZR)){
                 s->wilds_r_pending=0;
                 if(source==108)return wilds_round(s,o);
                 if(source==104&&s->wilds_r_direction&&spirit_available(o,15))
@@ -155,8 +155,8 @@ static WDecision wilds_bridge(WState *s,const WObservation *o,unsigned source)
 }
 static unsigned wilds_red_follow_r(WState *s,const MLObservation *b,unsigned edge,float cancel)
 {
-    if(b->held&~ML_R)s->wilds_r_pending=0;
-    else if((edge&ML_R)&&b->held==ML_R&&b->animation_frame+15>=cancel){
+    if(b->held&~ML_ZR)s->wilds_r_pending=0;
+    else if((edge&ML_ZR)&&b->held==ML_ZR&&b->animation_frame+15>=cancel){
         s->wilds_r_pending=1;s->wilds_r_wait=.32f;
     }
     return b->animation_frame>=cancel&&s->wilds_r_pending&&s->wilds_r_wait>0;
@@ -170,7 +170,7 @@ static WDecision wilds_red_round_step(WState *s,const WObservation *o)
     unsigned edge=b->held&~s->wilds_previous;s->wilds_previous=b->held;
     if(b->simulation_delta>0&&b->simulation_delta<30)s->wilds_r_wait-=b->simulation_delta/60;
     if(wilds_red_follow_r(s,b,edge,50)&&o->rank==3){
-        WDecision d=enter(s,o,W_CHARGE,ML_R);
+        WDecision d=enter(s,o,W_CHARGE,ML_ZR);
         s->red_foresight_chain=1;s->wilds_tier=4;
         d.source=s->source=917;d.slot=s->slot=w_clip(917)->slot;
         return d;
@@ -178,7 +178,7 @@ static WDecision wilds_red_round_step(WState *s,const WObservation *o)
     if(b->animation_frame>=50&&(edge&ML_X)&&b->held==ML_X&&o->rank==3)
         return w_wilds_enter(s,o,W_CHIJIN);
     if(b->animation_frame>=50&&(edge&ML_B)){
-        if(b->held&ML_R)return enter(s,o,W_SHEATHE,ML_R|ML_B);
+        if(b->held&ML_ZR)return enter(s,o,W_SHEATHE,ML_ZR|ML_B);
         return wilds_finish(s,W_ROLL,b->magnitude>=50?b->input_heading:b->heading);
     }
     if(b->animation_frame>=106||b->motion_finished)return wilds_finish(s,W_IDLE,b->heading);
@@ -199,12 +199,12 @@ static WDecision wilds_step(WState *s,const WObservation *o)
         if(s->wilds_r_wait>0)s->wilds_r_wait-=dt;
     }
     if(s->move==W_SLIDE){
-        if(b->held==ML_R)s->wilds_elapsed+=dt;else s->wilds_elapsed=0;
+        if(b->held==ML_ZR)s->wilds_elapsed+=dt;else s->wilds_elapsed=0;
     }
     if(s->source==908||s->source==909||s->source==915){
         if(pressed&ML_B)return wilds_finish(s,W_ROLL,b->magnitude>=50?b->input_heading:b->heading);
         s->wilds_elapsed+=dt*(s->wilds_stage==3?1.3f:1.0f);
-        if(!(b->held&ML_R)||s->wilds_elapsed>=3){
+        if(!(b->held&ML_ZR)||s->wilds_elapsed>=3){
             s->wilds_tier=s->wilds_elapsed<.8f?1:s->wilds_elapsed<1.6f?2:s->wilds_elapsed<2.9f?3:4;
             unsigned stage=s->wilds_stage;
             if(s->wilds_elapsed>=2.9f)stage=4;
@@ -222,29 +222,29 @@ static WDecision wilds_step(WState *s,const WObservation *o)
         }
         return d;
     }
-    /* Match the World kernel's 0.10-second R confirmation, so a human
-     * R+B chord cannot be stolen by a leading solo R request. */
+    /* Match the World kernel's 0.10-second ZR confirmation, so a human
+     * ZR+B chord cannot be stolen by a leading solo ZR request. */
     unsigned spirit_link=s->move==W_CHIJIN||s->move==W_SLIDE||s->move==W_FOCUS||s->source==902;
-    if(spirit_link&&(pressed&ML_R)&&b->held==ML_R&&frame+18>=clip->cancel){
+    if(spirit_link&&(pressed&ML_ZR)&&b->held==ML_ZR&&frame+18>=clip->cancel){
         s->wilds_r_pending=1;s->wilds_r_wait=.10f;
         wilds_spirit_direction(s,b);
     }
-    if(b->held&(ML_Y|ML_ZR|ML_B))s->wilds_r_pending=0;
+    if(b->held&(ML_Y|ML_R|ML_B))s->wilds_r_pending=0;
     /* Buffer the final twelve recovery frames so an early evade tap is not
      * swallowed by the native request filter while our action owns the slot. */
-    if((pressed&ML_B)&&!(b->held&ML_ZR)&&frame+12>=clip->cancel){
-        s->wilds_roll_buffer=.25f;s->wilds_roll_mod=b->held&ML_R;
+    if((pressed&ML_B)&&!(b->held&ML_R)&&frame+12>=clip->cancel){
+        s->wilds_roll_buffer=.25f;s->wilds_roll_mod=b->held&ML_ZR;
         s->wilds_roll_heading=b->magnitude>=50?b->input_heading:b->heading;
     }
     if(frame>=clip->cancel&&s->wilds_roll_buffer>0){
-        if(s->wilds_roll_mod||(b->held&ML_R))return enter(s,o,W_SHEATHE,ML_R|ML_B);
+        if(s->wilds_roll_mod||(b->held&ML_ZR))return enter(s,o,W_SHEATHE,ML_ZR|ML_B);
         return wilds_finish(s,W_ROLL,s->wilds_roll_heading);
     }
     if(s->source==916&&(b->motion_finished||frame>=clip->frames-2))return wilds_phase(s,o,917);
     unsigned finish=frame>=(s->source==917?(s->red_foresight_chain?105:clip->frames-1):clip->recovery)||
         b->motion_finished;
     if(s->source==918&&wilds_red_follow_r(s,b,pressed,clip->cancel)){
-        WDecision d=ground_enter(s,o,5,ML_R);
+        WDecision d=ground_enter(s,o,5,ML_ZR);
         if(d.kind==W_ENTER){
             s->red_foresight_chain=1;s->wilds_previous=b->held;s->wilds_sample=b->sample_sequence;
             s->wilds_r_pending=0;
@@ -255,7 +255,7 @@ static WDecision wilds_step(WState *s,const WObservation *o)
         /* Wilds MOT 287 accepts the next X from frame 60 and branches at 90. */
         unsigned retreat=s->source==W_CRIMSON_RETREAT;
         unsigned buffer_begin=retreat?60:clip->cancel-18;
-        if((pressed&ML_X)&&!(b->held&(ML_A|ML_R|ML_ZR))&&frame>=buffer_begin){
+        if((pressed&ML_X)&&!(b->held&(ML_A|ML_ZR|ML_R))&&frame>=buffer_begin){
             s->wilds_buffer=retreat?.75f:.35f;
             s->crimson_buffer_direction=b->magnitude>=50;
             s->crimson_buffer_heading=s->crimson_buffer_direction?b->input_heading:b->heading;
@@ -286,16 +286,16 @@ static WDecision wilds_step(WState *s,const WObservation *o)
         if(s->source==913&&frame>=53)return wilds_phase(s,o,914);
     }
     if(frame>=clip->cancel){
-        if(s->move==W_SLIDE&&b->held==ML_R&&s->wilds_elapsed>=.6f)
+        if(s->move==W_SLIDE&&b->held==ML_ZR&&s->wilds_elapsed>=.6f)
             return wilds_charge(s,o,wilds_spirit_is_two(s->source)?3:2);
-        if((pressed&(ML_X|ML_A))&&(b->held&(ML_X|ML_A|ML_R|ML_ZR))==(ML_X|ML_A)){
+        if((pressed&(ML_X|ML_A))&&(b->held&(ML_X|ML_A|ML_ZR|ML_R))==(ML_X|ML_A)){
             return wilds_native(s,o,wilds_fade_action(o));
         }
-        if((pressed&ML_B)&&!(b->held&ML_ZR)){
-            if(b->held&ML_R)return enter(s,o,W_SHEATHE,ML_R|ML_B);
+        if((pressed&ML_B)&&!(b->held&ML_R)){
+            if(b->held&ML_ZR)return enter(s,o,W_SHEATHE,ML_ZR|ML_B);
             return wilds_finish(s,W_ROLL,b->magnitude>=50?b->input_heading:b->heading);
         }
-        if((b->held&ML_R)&&(pressed&(ML_X|ML_A))){
+        if((b->held&ML_ZR)&&(pressed&(ML_X|ML_A))){
             return enter(s,o,pressed&ML_A?W_FORESIGHT:W_THRUST,b->held);
         }
         if(s->wilds_r_pending&&s->wilds_r_wait<=0){s->wilds_r_pending=0;return wilds_spirit(s,o);}
