@@ -1322,7 +1322,7 @@ static unsigned world_request(void *a,unsigned state,unsigned action,unsigned fl
     if(!world.move&&u16(a,STATE)==16&&source&&event&&world_ready(a)&&
        !(word(a,AIR)&0x400)&&state==16&&action>=16&&action<154&&
        held==ML_ZR&&((event->input[WI_FORESIGHT.word]>>WI_FORESIGHT.shift)&3)&&
-       (!(world.keys.ready&ML_R)||((event->input[WI_R.word]>>WI_R.shift)&3)!=3)){
+       (!(world.keys.ready&ML_ZR)||((event->input[WI_R.word]>>WI_R.shift)&3)!=3)){
         if(!world_r_gate.active){
             world_r_gate.active=1;world_r_gate.actor=(u32)(uptr)a;world_r_gate.epoch=byte(a,AREA);
             world_r_gate.motion=u16(a,MOTION);world_r_gate.generation=bind_generation;
