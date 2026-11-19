@@ -255,7 +255,7 @@ static WDecision wilds_step(WState *s,const WObservation *o)
         /* Wilds MOT 287 accepts the next X from frame 60 and branches at 90. */
         unsigned retreat=s->source==W_CRIMSON_RETREAT;
         unsigned buffer_begin=retreat?60:clip->cancel-18;
-        if((pressed&ML_X)&&!(b->held&(ML_A|ML_ZR|ML_R))&&frame>=buffer_begin){
+        if((pressed&ML_X)&&!(b->held&(ML_A|ML_ZR|ML_ZR))&&frame>=buffer_begin){
             s->wilds_buffer=retreat?.75f:.35f;
             s->crimson_buffer_direction=b->magnitude>=50;
             s->crimson_buffer_heading=s->crimson_buffer_direction?b->input_heading:b->heading;
@@ -291,7 +291,7 @@ static WDecision wilds_step(WState *s,const WObservation *o)
         if((pressed&(ML_X|ML_A))&&(b->held&(ML_X|ML_A|ML_ZR|ML_ZR))==(ML_X|ML_A)){
             return wilds_native(s,o,wilds_fade_action(o));
         }
-        if((pressed&ML_B)&&!(b->held&ML_R)){
+        if((pressed&ML_B)&&!(b->held&ML_ZR)){
             if(b->held&ML_ZR)return enter(s,o,W_SHEATHE,ML_ZR|ML_B);
             return wilds_finish(s,W_ROLL,b->magnitude>=50?b->input_heading:b->heading);
         }
