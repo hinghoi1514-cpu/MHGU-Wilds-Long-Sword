@@ -120,7 +120,7 @@ static void world_guild_chords(WState *s,unsigned held,const uint32_t *permissio
     WControls *c=&s->controls;
     static const unsigned ids[]={53,60,24},partners[]={ML_X,ML_A,ML_B},buttons[]={0,1,3};
     for(unsigned i=0;i<3;++i){
-        unsigned id=ids[i],mask=ML_R|partners[i];
+        unsigned id=ids[i],mask=ML_ZR|partners[i];
         int bit=world_command_bits[id];
         unsigned stage=w_permission_bit(permission,bit-1)|(w_permission_bit(permission,bit)<<1);
         if(!stage||(held&~mask)){
@@ -161,22 +161,22 @@ static WDecision wilds_iai_follow(WState *s,const WObservation *o)
         return (WDecision){0};
     }
     if(!s->counter_success){
-        if(held!=ML_R)s->iai_follow_keys=0;
-        else if(edge&ML_R){
-            s->iai_follow_keys=ML_R;
+        if(held!=ML_ZR)s->iai_follow_keys=0;
+        else if(edge&ML_ZR){
+            s->iai_follow_keys=ML_ZR;
             s->iai_follow_wait=.6f;
         }
-        /* The R that started Iai stays consumed until it is released. */
-        if(frame>=37&&s->iai_follow_keys==ML_R&&s->iai_follow_wait<=0)
+        /* The ZR that started Iai stays consumed until it is released. */
+        if(frame>=37&&s->iai_follow_keys==ML_ZR&&s->iai_follow_wait<=0)
             return wilds_charge(s,o,2);
         return (WDecision){0};
     }
-    if(b->held&~(ML_R|ML_B|ML_X))s->iai_follow_keys=0;
-    if((b->held&(ML_R|ML_B))==(ML_R|ML_B)&&(edge&(ML_R|ML_B)))
-        s->iai_follow_keys=ML_R|ML_B;
-    else if(edge&(ML_R|ML_B)){
+    if(b->held&~(ML_ZR|ML_B|ML_X))s->iai_follow_keys=0;
+    if((b->held&(ML_ZR|ML_B))==(ML_ZR|ML_B)&&(edge&(ML_ZR|ML_B)))
+        s->iai_follow_keys=ML_ZR|ML_B;
+    else if(edge&(ML_ZR|ML_B)){
         if(s->iai_follow_wait<=0)s->iai_follow_keys=0;
-        s->iai_follow_keys|=edge&(ML_R|ML_B);
+        s->iai_follow_keys|=edge&(ML_ZR|ML_B);
         s->iai_follow_wait=.10f;
     }
     if(frame<37)return (WDecision){0};
@@ -185,9 +185,9 @@ static WDecision wilds_iai_follow(WState *s,const WObservation *o)
     if(s->rank_paid&&o->rank==s->rank&&o->rank<3){
         next.rank=o->rank+1;if(next.rank==3)next.base.gauge=100;
     }
-    if(s->iai_follow_keys==(ML_R|ML_B))return enter(s,&next,W_SHEATHE,ML_R|ML_B);
+    if(s->iai_follow_keys==(ML_ZR|ML_B))return enter(s,&next,W_SHEATHE,ML_ZR|ML_B);
     if(held==ML_X&&next.rank==3)return w_wilds_enter(s,&next,W_CHIJIN);
-    if(s->iai_follow_keys==ML_R&&s->iai_follow_wait<=0){
+    if(s->iai_follow_keys==ML_ZR&&s->iai_follow_wait<=0){
         return wilds_native(s,&next,spirit_available(&next,20)?26:27);
     }
     return (WDecision){0};
@@ -212,10 +212,10 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
     const MLObservation *b=&o->base;
 #if ML_WILDS_MOVES
     if(s->move==W_CHIJIN&&s->source!=906&&s->source!=907&&b->animation_frame<=8){
-        if(b->held==(ML_R|ML_X))return enter(s,o,W_THRUST,b->held);
+        if(b->held==(ML_ZR|ML_X))return enter(s,o,W_THRUST,b->held);
         if(o->valor&&b->held==(ML_X|ML_A))return wilds_native(s,o,wilds_fade_action(o));
     }
-    if(!o->valor&&!s->move&&o->valor_move)return enter(s,o,o->valor_move,ML_R|(o->valor_move==W_SHEATHE?ML_B:ML_A));
+    if(!o->valor&&!s->move&&o->valor_move)return enter(s,o,o->valor_move,ML_ZR|(o->valor_move==W_SHEATHE?ML_B:ML_A));
     if(o->valor&&!s->move){
         if(!o->grounded||!o->valor_move)return (WDecision){0};
         if(o->valor_move==W_FOCUS||o->valor_move==W_SLIDE||o->valor_move==W_CHIJIN)return w_wilds_enter(s,o,o->valor_move);
@@ -223,7 +223,7 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
     }
     if(o->focus_strike&&wilds_focus_window(s,o)){
         WDecision focus=w_wilds_enter(s,o,W_FOCUS);
-        if(focus.kind==W_ENTER){s->consumed|=ML_R|ML_Y;return focus;}
+        if(focus.kind==W_ENTER){s->consumed|=ML_ZR|ML_Y;return focus;}
     }
     if(s->red_foresight_chain&&s->source==109)return wilds_red_round_step(s,o);
     if(s->move>=W_CHIJIN||s->source==918)return wilds_step(s,o);
@@ -243,7 +243,7 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
         else{
             if(b->simulation_delta>0&&b->simulation_delta<30)
                 s->air_sheathe_buffer-=b->simulation_delta/60;
-            if(!o->grounded&&b->held==(ML_R|ML_B)&&s->air_sheathe_held!=(ML_R|ML_B))
+            if(!o->grounded&&b->held==(ML_ZR|ML_B)&&s->air_sheathe_held!=(ML_ZR|ML_B))
                 s->air_sheathe_buffer=.35f;
         }
         s->air_sheathe_held=b->held;
@@ -254,7 +254,7 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
         if(air_spirit&&(b->motion==0x568||b->motion==0x59a||b->motion==0x59c)&&b->animation_frame>=10&&b->animation_frame<60&&
            s->air_sheathe_buffer>0&&!(b->held&(ML_X|ML_A|ML_Y|ML_ZR))){
             s->air_sheathe_buffer=0;
-            return enter(s,o,W_SHEATHE,ML_R|ML_B);
+            return enter(s,o,W_SHEATHE,ML_ZR|ML_B);
         }
         event=w_event(source,idle?0:b->animation_frame);
     }
@@ -273,7 +273,7 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
     if(s->input_motion!=b->motion){w_controls_bind(&s->controls);s->input_motion=b->motion;s->gu_chord_wait=0;}
     /* A short R+B tap can end before the two Foresight cancel windows.
      * Latch only a fresh chord; the source timeline still decides entry. */
-    unsigned sheath_edge=b->held==(ML_R|ML_B)&&
+    unsigned sheath_edge=b->held==(ML_ZR|ML_B)&&
         !(s->controls.buttons[2].raw&&s->controls.buttons[3].raw);
     w_controls_tick(&s->controls,b->actor,b->epoch,b->sample_sequence,b->held,
         b->simulation_delta/60,permission,direction,b->magnitude>=50,facing,facing);
@@ -293,7 +293,7 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
 #endif
         if(event&&event->phase==1&&b->simulation_delta>0&&b->simulation_delta<30)
             s->hold_seconds+=b->simulation_delta/60;
-        if(w_controls_query(&s->controls,39,1,0))return enter(s,o,W_BIG,ML_R);
+        if(w_controls_query(&s->controls,39,1,0))return enter(s,o,W_BIG,ML_ZR);
         if(w_controls_query(&s->controls,25,1,0))return enter(s,o,W_SMALL,ML_X);
         if(s->hold_seconds>=3.5f)return enter(s,o,W_SHEATHE_END,0);
         return (WDecision){0};
@@ -319,7 +319,7 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
         if(o->grounded&&frame>0)return enter(s,o,W_LAND,0);
         WGroundQuery air={.s=s,.o=o};
         int next=world_query_node(&air,56);
-        if(next==58)return enter(s,o,W_DOWN,ML_R|ML_X|ML_A);
+        if(next==58)return enter(s,o,W_DOWN,ML_ZR|ML_X|ML_A);
         /* The GU air pose has no slash collider; finish the released-input
          * route with an actual downward swing after the manual input window. */
         if(frame>=60)return enter(s,o,W_DOWN,0);
@@ -337,10 +337,10 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
         return (WDecision){0};
     }
     if(!s->move&&(source==149||source==154)){
-        if(w_controls_query(&s->controls,24,1,0))return enter(s,o,W_SHEATHE,ML_R|ML_B);
+        if(w_controls_query(&s->controls,24,1,0))return enter(s,o,W_SHEATHE,ML_ZR|ML_B);
         if(w_controls_query(&s->controls,60,1,0))
-            return enter(s,o,W_FORESIGHT,ML_R|ML_A);
-        if(w_controls_query(&s->controls,53,1,0))return enter(s,o,W_THRUST,ML_R|ML_X);
+            return enter(s,o,W_FORESIGHT,ML_ZR|ML_A);
+        if(w_controls_query(&s->controls,53,1,0))return enter(s,o,W_THRUST,ML_ZR|ML_X);
         return (WDecision){0};
     }
     unsigned node=s->move==W_GROUND?s->ground_node:world_source_node(source);
@@ -351,14 +351,14 @@ static WDecision world_command_step(WState *s,const WObservation *o,unsigned sou
         }
         if(s->queued==W_SHEATHE){
             if(frame>=s->queue_until||(b->held&(ML_X|ML_A|ML_Y|ML_ZR)))s->queued=0;
-            else if(input_stage(event,WI_SHEATHE)==3)return ground_enter(s,o,61,ML_R|ML_B);
+            else if(input_stage(event,WI_SHEATHE)==3)return ground_enter(s,o,61,ML_ZR|ML_B);
         }
     }
     WGroundQuery query={.s=s,.o=o};
     /* Shared weapon-ground special-sheathe transition, before local links.
      * Its own TIML command permission still owns both buffering and entry. */
     if(node!=0&&node!=64&&node!=65&&world_property(&query,11))
-        return ground_enter(s,o,61,ML_R|ML_B);
+        return ground_enter(s,o,61,ML_ZR|ML_B);
     int next=world_query_node(&query,node);
     if(next>=0){
         WDecision d=world_route(s,o,(unsigned)next);
